@@ -1,19 +1,25 @@
-import { ActionPanel, Action, Form, List, showToast, getPreferenceValues, Toast, environment } from "@raycast/api";
-import { useState } from "react";
+import { ActionPanel, Action, Form, List, showToast, Toast, LocalStorage, getPreferenceValues } from "@raycast/api";
+import { useState, useEffect } from "react";
 
 interface Preferences {
   siteMappings: string;
 }
 
-interface Site { 
+interface Site {
   name: string;
   url: string;
 }
 
-function getSites(): Site[] {
-  const { siteMappings } = getPreferenceValues<Preferences>();
+async function getSites(): Promise<Site[]> {
   try {
-    const siteMap = JSON.parse(siteMappings);
+    const { siteMappings: preferenceSites } = getPreferenceValues<Preferences>();
+    const preferenceMap = JSON.parse(preferenceSites || "{}");
+
+    const localSiteMappings = await LocalStorage.getItem<string>("siteMappings");
+    const localMap = JSON.parse(localSiteMappings || "{}");
+
+    const siteMap = { ...preferenceMap, ...localMap };
+
     return Object.entries(siteMap).map(([name, url]) => ({ name, url: url as string }));
   } catch (error) {
     showToast({ style: Toast.Style.Failure, title: "Invalid site mappings format" });
@@ -27,10 +33,14 @@ function AddSiteForm({ onSiteAdded }: { onSiteAdded: () => void }) {
 
   async function handleSubmit(values: { name: string; url: string }) {
     try {
-      const { siteMappings } = getPreferenceValues<Preferences>();
-      const sites = JSON.parse(siteMappings || "{}");
-      
-      if (sites[values.name]) {
+      // Check both preferences and LocalStorage for existing sites
+      const { siteMappings: preferenceSites } = getPreferenceValues<Preferences>();
+      const preferenceMap = JSON.parse(preferenceSites || "{}");
+
+      const localSiteMappings = await LocalStorage.getItem<string>("siteMappings");
+      const localMap = JSON.parse(localSiteMappings || "{}");
+
+      if (preferenceMap[values.name] || localMap[values.name]) {
         setNameError("Site with this name already exists");
         return;
       }
@@ -42,8 +52,9 @@ function AddSiteForm({ onSiteAdded }: { onSiteAdded: () => void }) {
         return;
       }
 
-      sites[values.name] = values.url;
-      await environment.writePreference("siteMappings", JSON.stringify(sites));
+      // Save only to LocalStorage
+      localMap[values.name] = values.url;
+      await LocalStorage.setItem("siteMappings", JSON.stringify(localMap));
       await showToast({ style: Toast.Style.Success, title: "Site added successfully" });
       onSiteAdded();
     } catch (error) {
@@ -78,18 +89,31 @@ function AddSiteForm({ onSiteAdded }: { onSiteAdded: () => void }) {
 }
 
 export default function Command() {
-  const [sites, setSites] = useState<Site[]>(getSites());
+  const [sites, setSites] = useState<Site[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
+  useEffect(() => {
+    loadSites();
+  }, []);
+
+  const loadSites = async () => {
+    const loadedSites = await getSites();
+    setSites(loadedSites);
+  };
+
   const refreshSites = () => {
-    setSites(getSites());
+    loadSites();
   };
 
   if (isAddingNew) {
-    return <AddSiteForm onSiteAdded={() => {
-      setIsAddingNew(false);
-      refreshSites();
-    }} />;
+    return (
+      <AddSiteForm
+        onSiteAdded={() => {
+          setIsAddingNew(false);
+          refreshSites();
+        }}
+      />
+    );
   }
 
   return (
@@ -112,10 +136,10 @@ export default function Command() {
                 title="Delete Site"
                 onAction={async () => {
                   try {
-                    const { siteMappings } = getPreferenceValues<Preferences>();
+                    const siteMappings = await LocalStorage.getItem<string>("siteMappings");
                     const sites = JSON.parse(siteMappings || "{}");
                     delete sites[site.name];
-                    await environment.writePreference("siteMappings", JSON.stringify(sites));
+                    await LocalStorage.setItem("siteMappings", JSON.stringify(sites));
                     refreshSites();
                     await showToast({ style: Toast.Style.Success, title: "Site deleted successfully" });
                   } catch (error) {
@@ -129,4 +153,4 @@ export default function Command() {
       ))}
     </List>
   );
-}  
+}

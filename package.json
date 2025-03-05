@@ -45,11 +45,11 @@
   "preferences": [
     {
       "name": "siteMappings",
-      "title": "Site Mappings",
-      "description": "JSON object mapping site names to URLs. Format: {\"Site Name\": \"https://example.com\"}",
-      "type": "textfield",
-      "required": true,
-      "default": "{}"
+      "type": "string",
+      "required": false,
+      "default": "{}",
+      "title": "Default Site Mappings",
+      "description": "JSON object mapping site names to URLs"
     }
   ]
 }
