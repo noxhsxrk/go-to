@@ -33,7 +33,6 @@ function AddSiteForm({ onSiteAdded }: { onSiteAdded: () => void }) {
 
   async function handleSubmit(values: { name: string; url: string }) {
     try {
-      // Check both preferences and LocalStorage for existing sites
       const { siteMappings: preferenceSites } = getPreferenceValues<Preferences>();
       const preferenceMap = JSON.parse(preferenceSites || "{}");
 
@@ -52,7 +51,6 @@ function AddSiteForm({ onSiteAdded }: { onSiteAdded: () => void }) {
         return;
       }
 
-      // Save only to LocalStorage
       localMap[values.name] = values.url;
       await LocalStorage.setItem("siteMappings", JSON.stringify(localMap));
       await showToast({ style: Toast.Style.Success, title: "Site added successfully" });
