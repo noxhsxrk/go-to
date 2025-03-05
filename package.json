@@ -45,7 +45,7 @@
   "preferences": [
     {
       "name": "siteMappings",
-      "type": "string",
+      "type": "textfield",
       "required": false,
       "default": "{}",
       "title": "Default Site Mappings",
