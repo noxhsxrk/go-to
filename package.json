@@ -14,7 +14,16 @@
       "name": "go",
       "title": "Go to Site",
       "description": "Quickly navigate to configured sites",
-      "mode": "no-view"
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "site",
+          "type": "text",
+          "required": true,
+          "description": "The name of the site to navigate to",
+          "placeholder": "Enter site name"
+        }
+      ]
     },
     {
       "name": "manage-sites",
