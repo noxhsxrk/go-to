@@ -117,12 +117,12 @@ export default function Command() {
 
   return (
     <List
-	      isLoading={sites.length === 0}
-	      actions={
-	        <ActionPanel>
-	          <Action title="Add New Site" onAction={() => setIsAddingNew(true)} />
-	        </ActionPanel>
-	      }
+      isLoading={sites.length === 0}
+      actions={
+        <ActionPanel>
+          <Action title="Add New Site" onAction={() => setIsAddingNew(true)} />
+        </ActionPanel>
+      }
     >
       {sites.map((site) => (
         <List.Item

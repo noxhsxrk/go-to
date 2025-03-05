@@ -75,12 +75,12 @@ export default async function Command(props: { arguments: { site?: string } }) {
   const matchedSite = await findBestMatch(site);
   if (matchedSite) {
     const siteMap = await getSiteMap();
-	    try {
-	      await open(siteMap[matchedSite]);
-	      showHUD(`Opening ${matchedSite}`);
-	    } catch (error) {
-	      showHUD("Failed to open site");
-	    }
+    try {
+      await open(siteMap[matchedSite]);
+      showHUD(`Opening ${matchedSite}`);
+    } catch (error) {
+      showHUD("Failed to open site");
+    }
     return null;
   }
 
