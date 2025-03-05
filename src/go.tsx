@@ -1,4 +1,5 @@
 import { open, showHUD, getPreferenceValues, LocalStorage } from "@raycast/api";
+import { showFailureToast } from "@raycast/utils";
 
 interface Preferences {
   siteMappings: string;
@@ -14,7 +15,7 @@ async function getSiteMap(): Promise<Record<string, string>> {
 
     return { ...preferenceMap, ...localMap };
   } catch (error) {
-    showHUD("Invalid site mappings format");
+    showFailureToast("Invalid site mappings format");
     return {};
   }
 }
@@ -49,7 +50,6 @@ async function findBestMatch(input: string): Promise<string | null> {
         bestScore = score;
         bestMatch = site;
       }
-      continue;
     }
 
     if (siteLower.includes(searchTerm)) {
@@ -75,8 +75,12 @@ export default async function Command(props: { arguments: { site?: string } }) {
   const matchedSite = await findBestMatch(site);
   if (matchedSite) {
     const siteMap = await getSiteMap();
-    open(siteMap[matchedSite]);
-    showHUD(`Opening ${matchedSite}`);
+	    try {
+	      await open(siteMap[matchedSite]);
+	      showHUD(`Opening ${matchedSite}`);
+	    } catch (error) {
+	      showHUD("Failed to open site");
+	    }
     return null;
   }
 
